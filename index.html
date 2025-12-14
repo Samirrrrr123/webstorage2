@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebStorage Таблица</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        .block { margin-bottom: 30px; padding: 15px; background: #f9f9f9; }
+        input { padding: 8px; margin: 5px; width: 180px; }
+        button { padding: 8px 15px; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background: #eee; }
+        .del { color: red; cursor: pointer; font-weight: bold; }
+        .empty { color: #777; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h2>Работа с WebStorage</h2>
+    
+    <div class="block">
+        <h3>Добавить запись</h3>
+        <input type="text" id="key" placeholder="Ключ">
+        <input type="text" id="value" placeholder="Значение">
+        <button onclick="saveItem()">Сохранить</button>
+    </div>
+    
+    <div class="block">
+        <h3>Тип хранилища</h3>
+        <label>
+            <input type="radio" name="stor" value="local" checked onclick="getStorage()"> localStorage
+        </label>
+        <label>
+            <input type="radio" name="stor" value="session" onclick="getStorage()"> sessionStorage
+        </label>
+        <button onclick="clearStorage()" style="margin-left:30px;">Очистить всё</button>
+        <button onclick="addTest()">Тестовые данные</button>
+    </div>
+    
+    <h3>Содержимое хранилища:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th width="30%">Ключ</th>
+                <th width="60%">Значение</th>
+                <th width="10%">Действие</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        let currentStorage = localStorage;
+        
+        function updateTable() {
+            let tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            let keys = [];
+            for(let i = 0; i < currentStorage.length; i++) {
+                let key = currentStorage.key(i);
+                if(key && key !== '') {
+                    keys.push(key);
+                }
+            }
+            
+            if(keys.length === 0) {
+                let row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" class="empty">Нет данных</td>';
+                tbody.appendChild(row);
+                return;
+            }
+            
+            for(let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                let value = currentStorage.getItem(key);
+                
+                let row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${key}</td>
+                    <td>${value}</td>
+                    <td><span class="del" onclick="deleteItem('${key}')">X</span></td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+        
+        function getStorage() {
+            let radios = document.getElementsByName('stor');
+            if(radios[0].checked) {
+                currentStorage = localStorage;
+            } else {
+                currentStorage = sessionStorage;
+            }
+            updateTable();
+        }
+        
+        function saveItem() {
+            let key = document.getElementById('key').value.trim();
+            let value = document.getElementById('value').value.trim();
+            
+            if(key === '' || value === '') {
+                alert('Заполните оба поля');
+                return;
+            }
+            
+            currentStorage.setItem(key, value);
+            
+            document.getElementById('key').value = '';
+            document.getElementById('value').value = '';
+            
+            updateTable();
+        }
+        
+        function deleteItem(key) {
+            if(confirm('Удалить "' + key + '"?')) {
+                currentStorage.removeItem(key);
+                updateTable();
+            }
+        }
+        
+        function clearStorage() {
+            if(confirm('Вы уверены, что хотите полностью очистить локальное хранилище?')) {
+                currentStorage.clear();
+                updateTable();
+            }
+        }
+        
+        function addTest() {
+            currentStorage.setItem('имя', 'Алексей');
+            currentStorage.setItem('город', 'Москва');
+            currentStorage.setItem('язык', 'JavaScript');
+            currentStorage.setItem('курс', '3');
+            currentStorage.setItem('тема', 'WebStorage');
+            updateTable();
+        }
+        
+        window.onload = function() {
+            updateTable();
+        };
+    </script>
+</body>
+</html>
